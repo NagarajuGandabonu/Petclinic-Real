@@ -15,7 +15,7 @@ pipeline{
         }
         stage('Checkout From Git'){
             steps{
-                git branch: 'main', url: 'https://github.com/Aj7Ay/Petclinic-Real.git'
+                git branch: 'main', url: 'https://github.com/NagarajuGandabonu/Petclinic-Real.git'
             }
         }
         stage('mvn compile'){
@@ -59,16 +59,16 @@ pipeline{
             steps{
                 script{
                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
-                       sh "docker build -t petclinic1 ."
-                       sh "docker tag petclinic1 sevenajay/petclinic1:latest "
-                       sh "docker push sevenajay/petclinic1:latest "
+                       sh "docker build -t petclinic7 ."
+                       sh "docker tag petclinic7 nagarajug7/petclinic7:latest "
+                       sh "docker push nagarajug7/petclinic7:latest "
                     }
                 }
             }
         }
         stage("TRIVY"){
             steps{
-                sh "trivy image sevenajay/petclinic1:latest > trivy.txt" 
+                sh "trivy image nagarajug7/petclinic1:latest > trivy.txt" 
             }
         }
         stage('Clean up containers') {   //if container runs it will stop and remove this block
@@ -83,35 +83,9 @@ pipeline{
             }
           }
         }
-        stage ('Manual Approval'){
-          steps {
-           script {
-             timeout(time: 10, unit: 'MINUTES') {
-              def approvalMailContent = """
-              Project: ${env.JOB_NAME}
-              Build Number: ${env.BUILD_NUMBER}
-              Go to build URL and approve the deployment request.
-              URL de build: ${env.BUILD_URL}
-              """
-             mail(
-             to: 'postbox.aj99@gmail.com',
-             subject: "${currentBuild.result} CI: Project name -> ${env.JOB_NAME}", 
-             body: approvalMailContent,
-             mimeType: 'text/plain'
-             )
-            input(
-            id: "DeployGate",
-            message: "Deploy ${params.project_name}?",
-            submitter: "approver",
-            parameters: [choice(name: 'action', choices: ['Deploy'], description: 'Approve deployment')]
-            )  
-          }
-         }
-       }
-    }
         stage('Deploy to conatiner'){
             steps{
-                sh 'docker run -d --name pet1 -p 8082:8080 sevenajay/petclinic1:latest'
+                sh 'docker run -d --name pet1 -p 8082:8080 nagarajug7/petclinic7:latest'
             }
         }
         stage("Deploy To Tomcat"){
@@ -119,40 +93,6 @@ pipeline{
                 sh "sudo cp  /var/lib/jenkins/workspace/petclinic/target/petclinic.war /opt/apache-tomcat-9.0.65/webapps/ "
             }
         }
-        stage('Deploy to kubernets'){
-            steps{
-                script{
-                    withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-                       sh 'kubectl apply -f deployment.yaml'
-                  }
-                }
-            }
-        }
-    }
-    post {
-     always {
-        emailext attachLog: true,
-            subject: "'${currentBuild.result}'",
-            body: "Project: ${env.JOB_NAME}<br/>" +
-                "Build Number: ${env.BUILD_NUMBER}<br/>" +
-                "URL: ${env.BUILD_URL}<br/>",
-            to: 'postbox.aj99@gmail.com',
-            attachmentsPattern: 'trivy.txt'
-        }
     }
 }
-
-
-// try this approval stage also 
-
-stage('Manual Approval') {
-  timeout(time: 10, unit: 'MINUTES') {
-    mail to: 'postbox.aj99@gmail.com',
-         subject: "${currentBuild.result} CI: ${env.JOB_NAME}",
-         body: "Project: ${env.JOB_NAME}\nBuild Number: ${env.BUILD_NUMBER}\nGo to ${env.BUILD_URL} and approve deployment"
-    input message: "Deploy ${params.project_name}?", 
-           id: "DeployGate", 
-           submitter: "approver", 
-           parameters: [choice(name: 'action', choices: ['Deploy'], description: 'Approve deployment')]
-  }
-}
+        
