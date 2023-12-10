@@ -18,18 +18,18 @@
         chdir: /var/lib/jenkins/workspace/Ansible/
 
     - name: tag image
-      command: docker tag petclinic7:latest sevenajay/petclinic7:latest
+      command: docker tag petclinic7:latest nagarajug7/petclinic7:latest
 
     - name: Log in to Docker Hub
       docker_login:
         registry_url: https://index.docker.io/v1/
-        username: sevenajay
-        password: dckr_pat_n3rrKF4kgVcDuAxxxxxxxg6eg
+        username: nagarajug7
+        password: Naga@1234
       register: docker_login_result  
 
     - name: Push image
-      command: docker push sevenajay/petclinic7:latest
+      command: docker push nagarajug7/petclinic7:latest
 
     - name: Run container
-      command: docker run -d --name pet1 -p 8081:8080 sevenajay/petclinic7:latest
+      command: docker run -d --name pet1 -p 8081:8080 nagarajug7/petclinic7:latest
       
